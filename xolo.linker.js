@@ -2,7 +2,8 @@ var browser = require("./browserbot");
 var emailBot = require("./emailbot");
 const fs = require('fs');
 const path = require('path');
-var email = "refeiyang@gmail.com";
+var config = require("./bottoken/mail.config.json")
+var email = config.email;
 var host = "https://www.xolo.io/";
 const util = require('util');
 
