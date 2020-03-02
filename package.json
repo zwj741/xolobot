@@ -1,0 +1,32 @@
+{
+  "name": "telegramandxolo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js",
+    "browser": "nodemon browserbot.js",
+    "xolo": "nodemon xolo.linker.js",
+    "gmail": "nodemon emailbot.js",
+    "gmap": "nodemon googlemap.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  },
+  "dependencies": {
+    "base-64": "^0.1.0",
+    "country-code-lookup": "0.0.16",
+    "googleapis": "^39.2.0",
+    "node-html-parser": "^1.2.8",
+    "puppeteer": "^2.1.1",
+    "telegraf": "^3.36.0"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "bottoken/*.json"
+    ]
+  }
+}
