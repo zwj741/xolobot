@@ -59,7 +59,7 @@ bot.on("text", async (ctx) => {
             });
             var folder = path.join( __dirname ,'cache');
             fs.readdirSync(folder).forEach(file => {
-                console.log(file);
+                //console.log(file);
                 if(path.extname(file) == ".pdf")
                 {
                     ctx.telegram.sendDocument(ctx.from.id, {
@@ -118,7 +118,7 @@ async function toJson(data)
                                 if(isMatch !=null && isMatch.groups!=null)
                                 {
                                     finded.matchCallback(isMatch.groups,result);
-                                    console.log(finded)
+                                    //console.log(finded)
                                 }
                             }
                         }
