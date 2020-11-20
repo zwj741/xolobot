@@ -14,15 +14,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.6"
   },
   "dependencies": {
     "base-64": "^0.1.0",
     "country-code-lookup": "0.0.16",
-    "googleapis": "^39.2.0",
-    "node-html-parser": "^1.2.8",
+    "googleapis": "^65.0.0",
+    "node-html-parser": "^1.4.9",
     "puppeteer": "^2.1.1",
-    "telegraf": "^3.36.0"
+    "telegraf": "^3.38.0"
   },
   "nodemonConfig": {
     "ignore": [

@@ -16,7 +16,7 @@ module.exports = [
         required:true
     },
     {
-        name:"公司注册码",
+        name:"公司注册号",
         key:"registerNo",
         or:"taxNo",
     },
@@ -43,7 +43,15 @@ module.exports = [
                 name:"positive"
             }
             
-        ]
+        ],
+        pattern:/(?<text>美金|欧元)$/,
+        matchCallback:(match,model)=>{
+
+            if(match.text == "美金")
+            {
+                model.currency = "USD";
+            }
+        }
     },
     {
         name:"汇款编号",

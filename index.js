@@ -1,11 +1,13 @@
 const Telegraf = require('telegraf')
 const mapper = require("./keyvaluemapper.cn");
-const bot = new Telegraf(process.env.BOT_TOKEN|| "916616232:AAE0nHRqoufx_vx1ZKxMRo5ehTNsChJFZ2M");
+const bot = new Telegraf(process.env.BOT_TOKEN|| "1314217020:AAH76XlQEpZUsFuFJRPorsn1d1tdFV9riH4");
 const valueAdaptor= require("./valueadaptor");
 const ruleAdaptor =require("./ruleadptor");
 const operator = require("./xolo.linker");
 const addressBot = require("./googlemap");
 const lookup = require('country-code-lookup')
+const path = require("path");
+const fs = require("fs");
 
 bot.start((ctx) => ctx.reply('欢迎'))
 bot.on("text", async (ctx) => {
@@ -33,13 +35,13 @@ bot.on("text", async (ctx) => {
             ctx.reply("验证地址信息...");
 
            var list= await new addressBot().validate(result.companyAddress);
-           console.log(list)
            if(list!=null && list.length>=3)
            {
-               result.country = lookup.byInternet(list[list.length-1]).country;
+                var lookUpIt = lookup.byInternet(list[list.length-1])
+               result.country = lookUpIt!=null?lookUpIt.country:list[list.length-1];
                result.postCode = list[list.length -2];
                result.city = list[list.length -3];
-
+               ctx.reply("地址解析成功：" + list.join(" "))
            }
            else
            {
@@ -49,12 +51,27 @@ bot.on("text", async (ctx) => {
         }
         ctx.reply("解析成功，正在登陆...");
 
-        //console.log(result)
-        operator.getLoginEmail((link)=>{
+        operator.getLoginEmail(async (link)=>{
             ctx.reply("获取登陆邮件成功。开始登陆...");
-            operator.login(link,result)
+            await operator.login(link,result).catch(err=>{
+
+                ctx.reply("发生了未知错误，请重试")
+            });
+            var folder = path.join( __dirname ,'cache');
+            fs.readdirSync(folder).forEach(file => {
+                console.log(file);
+                if(path.extname(file) == ".pdf")
+                {
+                    ctx.telegram.sendDocument(ctx.from.id, {
+                        source: path.join(folder,file),
+                        filename:  path.basename(file)
+                     }).catch(function(error){ console.log(error); })
+                     fs.unlinkSync(path.join(folder,file))
+                }
+     
+            });
             ctx.reply("已发送发票到邮箱："+result.email)
-            console.log("should continue action",link)
+            //console.log("should continue action",link)
         }) 
 
     }
@@ -87,12 +104,23 @@ async function toJson(data)
                 //console.log(key)
                 if(finded!=null)
                 {
+                
                     if(finded.type)
                     {
                         var adaptor = valueAdaptor.adaptor.find(p=>p.name == finded.type);
                         if(adaptor && adaptor.callback)
                         {
                             result[finded.key] = adaptor.callback(value);
+
+                            if(finded.pattern)
+                            {
+                                var isMatch = (value + "").match(finded.pattern);
+                                if(isMatch !=null && isMatch.groups!=null)
+                                {
+                                    finded.matchCallback(isMatch.groups,result);
+                                    console.log(finded)
+                                }
+                            }
                         }
                     }
                     else{
