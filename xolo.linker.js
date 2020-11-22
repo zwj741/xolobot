@@ -6,11 +6,10 @@ var config = require("./bottoken/email.config.json")
 var email = config.email;
 var host = "https://www.xolo.io/";
 const util = require('util');
-const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 
 function Operator() {
     var instance = new browser({
-        headless: false
+        headless: true
     });
     this.lastLink = null;
     this.getLoginEmail = function (callback) {
@@ -43,7 +42,8 @@ function Operator() {
         await instance.page.click("#customer-select-container")
         await instance.page.keyboard.type(model.companyName);
         try {
-            await instance.page.click(".select2-results__option.select2-results__option--highlighted");
+            var element = await instance.page.waitForSelector(".select2-results__option.select2-results__option--highlighted");
+            await element.click();
         }
         catch
         {
@@ -67,7 +67,7 @@ function Operator() {
         await instance.page.click("#add-customer");
         await instance.page.waitForSelector("#customerForm",{visible:true})
         await instance.page.type("#customer-name", model.companyName);
-        await instance.page.type("#customer-address", model.companyAddress);
+        await instance.page.type("#customer-address", model.address);
         await instance.page.type("#contact-city", model.city);
         await instance.page.type("#customer-postalcode", model.postCode);
 
@@ -104,65 +104,63 @@ function Operator() {
             var serverModel = {};
 
             try{
-                // await instance.page.waitFor(1000);
-                // var element = await instance.page.$x("//a[@class='edit-customer'][contains(., 'Edit')]");
-                // await element[0].click();
-                // var cancelable = await instance.page.waitForSelector("#customer-modal .btn-light",{
-                //         visible:true
-                // });
-                // cancelable.click()
-                // await instance.page.waitFor(1000)
-                // var element = await instance.page.$x("//a[@class='edit-customer'][contains(., 'Edit')]");
-                // await element[0].click();
-                // await instance.page.waitForSelector("#customer-modal",{
-                //     visible:true
-                // });
-                // await instance.page.waitFor(1000)
-
-                // var cancelable = await instance.page.waitForSelector("#customer-modal .btn-light",{
-                //     visible:true
-                // });
-                // cancelable.click()
-                //await instance.page.waitFor(5000)
-
-                // serverModel.companyAddress = await parent.$eval("#customer-address",el=>el.textContent.trim());// await (await instance.page.$("#customer-address")).evaluate(p=>p.textContent);
-                // serverModel.postCode = await parent.$eval("#customer-postalcode",el=>el.textContent.trim());//await (await instance.page.$("#customer-postalcode")).evaluate(p=>p.textContent);
-                // serverModel.taxNo = await parent.$eval("#vatRegistrationNumber",el=>el.textContent.trim());//await (await instance.page.$("#vatRegistrationNumber")).evaluate(p=>p.textContent);
-                // serverModel.email =await parent.$eval("#email",el=>el.textContent.trim());// await (await instance.page.$("#email")).evaluate(p=>p.textContent);
-                // serverModel.contackPerson = await parent.$eval("#contact-name",el=>el.textContent.trim());//await (await instance.page.$("#contact-name")).evaluate(p=>p.textContent);
-                // serverModel.registerNo = await parent.$eval("#customer-regcode",el=>el.textContent.trim());//await (await instance.page.$("#customer-regcode")).evaluate(p=>p.textContent);
-    
-               
-                // var keys = Object.keys(serverModel);
-                // console.log(serverModel)
-
-                // for(var i = 0;i < keys.length ;++i)
-                // {
-                //     if(serverModel[keys[i]] != model[keys[i]]
-                //         && !!model[keys[i]]
-                //         && !!serverModel[keys[i]]
-                //         )
-                //     {
-                //         needSave = true;
-                //     }
-                // }
-                // console.log(needSave)
-                // if(needSave)
-                // {
-                //     console.log("something changed");
-                //     await parent.$eval("#customer-address",e=>e.setAttribute("value",model.companyAddress))
-                //     await parent.$eval("#customer-postalcode",e=>e.setAttribute("value",model.postCode))
-                //     await parent.$eval("#vatRegistrationNumber",e=>e.setAttribute("value",model.taxNo))
-                //     await parent.$eval("#email",e=>e.setAttribute("value",model.email))
-                //     await parent.$eval("#contact-name",e=>e.setAttribute("value",model.contackPerson))
-                //     await parent.$eval("#customer-regcode",e=>e.setAttribute("value",model.registerNo))
-                //     await parent.click("#save-customer");
-                // }
-                // else{
-                //     await parent.click(".btn-light");
-                // }
+                //await instance.page.waitFor(2000);
+                await instance.page.waitForSelector("#to-info .mt-3",{
+                    visible:true
+                })
+                var element = await instance.page.$x("//a[@class='edit-customer'][contains(., 'Edit')]");
+                await element[0].click();
+                await instance.page.waitForSelector("#customerForm",{
+                    visible:true
+                });
+                await instance.page.waitFor(1000);
                 
-                //await instance.page.waitFor(3000);
+                var elementList = {};
+
+                elementList.address =  await instance.page.$("#customerForm #customer-address");
+                elementList.postCode =  await instance.page.$("#customerForm #customer-postalcode");
+                elementList.taxNo =  await instance.page.$("#customerForm #vatRegistrationNumber");
+                elementList.email =  await instance.page.$("#customerForm #email");
+                elementList.contackPerson =  await instance.page.$("#customerForm #contact-name");
+                elementList.registerNo =  await instance.page.$("#customerForm #customer-regcode");
+
+
+                //serverModel.companyAddress = await instance.page.evaluate(p=>p.value,element.companyAddress)//await instance.page.$eval("#customerForm #customer-address",el=>el.textContent.trim());// await (await instance.page.$("#customer-address")).evaluate(p=>p.textContent);
+     
+                var keys = Object.keys(elementList);
+
+                for(var i = 0;i < keys.length ;++i)
+                {
+                    serverModel[keys[i]] = await instance.page.evaluate(p=>p.value,elementList[keys[i]]);
+
+                    if(serverModel[keys[i]] != model[keys[i]]
+                        && !!model[keys[i]]
+                        && !!serverModel[keys[i]]
+                        )
+                    {
+                        var data = model[keys[i]];
+                        var func = (selector,data)=>{
+                            selector.value = data;
+                            return '';
+                        };
+                        await instance.page.evaluate(func,elementList[keys[i]],data)
+                        needSave = true;
+                    }
+                }
+                //console.log(needSave)
+         
+                if(needSave)
+                {
+                    await instance.page.click("#customerForm #save-customer");
+                }
+                else{
+                    await instance.page.click("#customerForm .btn-light");
+                }
+
+                await instance.page.waitForSelector("#customerForm",{
+                    hidden:true
+                })
+                await instance.page.waitFor(1000)
 
             }
             catch(err){
@@ -188,14 +186,14 @@ function Operator() {
             await instance.page.click(".select2-results__option:last-child")
 
         }
-        // await Promise.all([
-        //     instance.page.click(".btn.btn-success"),
-        //     instance.page.waitFor(1000)
-        // ]);
+        await Promise.all([
+            instance.page.click(".btn.btn-success"),
+            instance.page.waitFor(1000)
+        ]);
 
-        // await instance.page.click("#send-email");
-        // await this.downloadPDF()
-        // await instance.quit();
+        await instance.page.click("#send-email");
+        await this.downloadPDF()
+        await instance.quit();
     }
 
     this.downloadPDF = async function () {
@@ -206,10 +204,39 @@ function Operator() {
         console.log("download folder" + folder)
         await instance.page._client.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: folder });
         await instance.page.goto(link).catch(() => { });
-        await instance.page.waitFor(5000);
+        await checkExistsWithTimeout(folder,30 *1000)        
+        //await instance.page.waitFor(5000);
 
     }
     return this;
+}
+
+function checkExistsWithTimeout(folder, timeout) {
+    return new Promise(function (resolve, reject) {
+
+        var timer = setTimeout(function () {
+            watcher.close();
+            reject(new Error('File did not exists and was not created during the timeout.'));
+        }, timeout);
+
+        // fs.access(filePath, fs.constants.R_OK, function (err) {
+        //     if (!err) {
+        //         clearTimeout(timer);
+        //         watcher.close();
+        //         resolve();
+        //     }
+        // });
+
+        // var dir = path.dirname(filePath);
+        // var basename = path.basename(filePath);
+        var watcher = fs.watch(folder, function (eventType, filename) {
+            if (eventType === 'rename' ) {
+                clearTimeout(timer);
+                watcher.close();
+                resolve();
+            }
+        });
+    });
 }
 
 

@@ -41,6 +41,7 @@ bot.on("text", async (ctx) => {
                result.country = lookUpIt!=null?lookUpIt.country:list[list.length-1];
                result.postCode = list[list.length -2];
                result.city = list[list.length -3];
+               result.address = list[0];
                ctx.reply("地址解析成功：" + list.join(" "))
            }
            else
@@ -58,18 +59,22 @@ bot.on("text", async (ctx) => {
                 ctx.reply("发生了未知错误，请重试")
             });
             var folder = path.join( __dirname ,'cache');
-            fs.readdirSync(folder).forEach(file => {
-                //console.log(file);
-                if(path.extname(file) == ".pdf")
-                {
-                    ctx.telegram.sendDocument(ctx.from.id, {
-                        source: path.join(folder,file),
-                        filename:  path.basename(file)
-                     }).catch(function(error){ console.log(error); })
-                     fs.unlinkSync(path.join(folder,file))
-                }
-     
-            });
+            var files =  fs.readdirSync(folder);
+            if(files.length > 0)
+            {
+                files.forEach(file => {
+                    if(path.extname(file) == ".pdf")
+                    {
+                        ctx.telegram.sendDocument(ctx.from.id, {
+                            source: path.join(folder,file),
+                            filename:  path.basename(file)
+                         }).catch(function(error){ console.log(error); })
+                         fs.unlinkSync(path.join(folder,file))
+                    }
+         
+                });
+            }
+
             ctx.reply("已发送发票到邮箱："+result.email)
             //console.log("should continue action",link)
         }) 

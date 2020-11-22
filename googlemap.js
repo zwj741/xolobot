@@ -1,7 +1,9 @@
 const Browser = require("./browserbot");
 const parser = require('node-html-parser');
 
-
+function hasNumber(myString) {
+    return /\d/.test(myString);
+  }
 class GoogleMapService
 {
     constructor()
@@ -37,20 +39,30 @@ class GoogleMapService
                      var subtitle = await browser.page.waitForSelector(".section-share-summary-subtitle",{
                          visible:true
                      })
-                     var htmlString = await subtitle.evaluate(element => element.textContent);
+                      var htmlString = await subtitle.evaluate(element => element.textContent);
                       var list = htmlString.split(",");
                       for(var i =0;i< list.length ;++i)
                       {
                           var data = list[i].trim();
-                          if(data)
+                          if(data && hasNumber(data))
                           {
                             if(i >0)
                             {
-                                data = data.split(" ");
-                                for(var j=data.length-1;j>-1;--j)
+                                var array  = data.split(" ");
+                                if(array.length == 1)
                                 {
-                                    result.push(data[j])
+                                    result.push(data);
                                 }
+                                else 
+                                {
+                                    result.push(array[0])
+                                    result.push( array.slice(1).join(" "))
+
+                                }
+                                // for(var j=data.length-1;j>-1;--j)
+                                // {
+                                //     result.push(data[j])
+                                // }
                             }
                             else{
                                 result.push(data);
